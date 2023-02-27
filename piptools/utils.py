@@ -63,12 +63,7 @@ def key_from_req(
     req: typing.Union[InstallRequirement, Distribution, Requirement]
 ) -> str:
     """Get an all-lowercase version of the requirement's name."""
-    if hasattr(req, "key"):
-        # from pkg_resources, such as installed dists for pip-sync
-        key = req.key
-    else:
-        # from packaging, such as install requirements from requirements.txt
-        key = req.name
+    key = req.key if hasattr(req, "key") else req.name
     return str(canonicalize_name(key))
 
 
@@ -81,18 +76,20 @@ def make_install_requirement(
 ) -> InstallRequirement:
     # If no extras are specified, the extras string is blank
     extras_string = ""
-    extras = ireq.extras
-    if extras:
+    if extras := ireq.extras:
         # Sort extras for stability
         extras_string = f"[{','.join(sorted(extras))}]"
 
-    version_pin_operator = "=="
     version_as_str = str(version)
-    for specifier in ireq.specifier:
-        if specifier.operator == "===" and specifier.version == version_as_str:
-            version_pin_operator = "==="
-            break
-
+    version_pin_operator = next(
+        (
+            "==="
+            for specifier in ireq.specifier
+            if specifier.operator == "==="
+            and specifier.version == version_as_str
+        ),
+        "==",
+    )
     return install_req_from_line(
         str(f"{name}{extras_string}{version_pin_operator}{version}"),
         constraint=ireq.constraint,

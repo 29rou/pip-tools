@@ -395,7 +395,7 @@ def test_editable_package(pip_conf, runner):
     fake_package_dir = os.path.join(PACKAGES_PATH, "small_fake_with_deps")
     fake_package_dir = path_to_url(fake_package_dir)
     with open("requirements.in", "w") as req_in:
-        req_in.write("-e " + fake_package_dir)  # require editable fake package
+        req_in.write(f"-e {fake_package_dir}")
 
     out = runner.invoke(cli, ["-n"])
 
@@ -435,7 +435,7 @@ def test_editable_package_constraint_without_non_editable_duplicate(pip_conf, ru
     fake_package_dir = os.path.join(PACKAGES_PATH, "small_fake_a")
     fake_package_dir = path_to_url(fake_package_dir)
     with open("constraints.txt", "w") as constraints:
-        constraints.write("-e " + fake_package_dir)  # require editable fake package
+        constraints.write(f"-e {fake_package_dir}")
 
     with open("requirements.in", "w") as req_in:
         req_in.write(
@@ -461,7 +461,7 @@ def test_editable_package_in_constraints(pip_conf, runner, req_editable):
     fake_package_dir = path_to_url(fake_package_dir)
 
     with open("constraints.txt", "w") as constraints_in:
-        constraints_in.write("-e " + fake_package_dir)
+        constraints_in.write(f"-e {fake_package_dir}")
 
     with open("requirements.in", "w") as req_in:
         prefix = "-e " if req_editable else ""
@@ -482,7 +482,7 @@ def test_editable_package_vcs(runner):
         "#egg=pip-tools"
     )
     with open("requirements.in", "w") as req_in:
-        req_in.write("-e " + vcs_package)
+        req_in.write(f"-e {vcs_package}")
     out = runner.invoke(cli, ["-n", "--rebuild"])
     assert out.exit_code == 0
     assert vcs_package in out.stderr
@@ -501,7 +501,7 @@ def test_locally_available_editable_package_is_not_archived_in_cache_dir(
     fake_package_dir = path_to_url(fake_package_dir)
 
     with open("requirements.in", "w") as req_in:
-        req_in.write("-e " + fake_package_dir)  # require editable fake package
+        req_in.write(f"-e {fake_package_dir}")
 
     out = runner.invoke(cli, ["-n", "--rebuild", "--cache-dir", str(cache_dir)])
 
@@ -833,15 +833,7 @@ def test_generate_hashes_with_editable(pip_conf, runner):
     with open("requirements.in", "w") as fp:
         fp.write(f"-e {small_fake_package_url}\n")
     out = runner.invoke(cli, ["--no-annotate", "--generate-hashes"])
-    expected = (
-        "-e {}\n"
-        "small-fake-a==0.1 \\\n"
-        "    --hash=sha256:5e6071ee6e4c59e0d0408d366f"
-        "e9b66781d2cf01be9a6e19a2433bb3c5336330\n"
-        "small-fake-b==0.1 \\\n"
-        "    --hash=sha256:acdba8f8b8a816213c30d5310c"
-        "3fe296c0107b16ed452062f7f994a5672e3b3f\n"
-    ).format(small_fake_package_url)
+    expected = f"-e {small_fake_package_url}\nsmall-fake-a==0.1 \\\n    --hash=sha256:5e6071ee6e4c59e0d0408d366fe9b66781d2cf01be9a6e19a2433bb3c5336330\nsmall-fake-b==0.1 \\\n    --hash=sha256:acdba8f8b8a816213c30d5310c3fe296c0107b16ed452062f7f994a5672e3b3f\n"
     assert out.exit_code == 0
     assert expected in out.stderr
 

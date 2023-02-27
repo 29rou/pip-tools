@@ -99,10 +99,7 @@ class DependencyCache:
         ("ipython", "2.1.0[nbconvert,notebook]")
         """
         name, version, extras = as_tuple(ireq)
-        if not extras:
-            extras_string = ""
-        else:
-            extras_string = f"[{','.join(extras)}]"
+        extras_string = f"[{','.join(extras)}]" if extras else ""
         return name, f"{version}{extras_string}"
 
     def write_cache(self) -> None:

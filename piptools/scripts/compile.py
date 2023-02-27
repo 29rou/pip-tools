@@ -158,19 +158,7 @@ def _get_default_option(option_name: str) -> Any:
         "Will be derived from input file otherwise."
     ),
 )
-@click.option(
-    "--allow-unsafe/--no-allow-unsafe",
-    is_flag=True,
-    default=False,
-    help=(
-        "Pin packages considered unsafe: {}.\n\n"
-        "WARNING: Future versions of pip-tools will enable this behavior by default. "
-        "Use --no-allow-unsafe to keep the old behavior. It is recommended to pass the "
-        "--allow-unsafe now to adapt to the upcoming change.".format(
-            ", ".join(sorted(UNSAFE_PACKAGES))
-        )
-    ),
-)
+@click.option("--allow-unsafe/--no-allow-unsafe", is_flag=True, default=False, help=f'Pin packages considered unsafe: {", ".join(sorted(UNSAFE_PACKAGES))}.\n\nWARNING: Future versions of pip-tools will enable this behavior by default. Use --no-allow-unsafe to keep the old behavior. It is recommended to pass the --allow-unsafe now to adapt to the upcoming change.')
 @click.option(
     "--strip-extras",
     is_flag=True,
@@ -273,37 +261,31 @@ def cli(
     """Compiles requirements.txt from requirements.in specs."""
     log.verbosity = verbose - quiet
 
-    if len(src_files) == 0:
+    if not src_files:
         if os.path.exists(DEFAULT_REQUIREMENTS_FILE):
             src_files = (DEFAULT_REQUIREMENTS_FILE,)
         elif os.path.exists("setup.py"):
             src_files = ("setup.py",)
         else:
             raise click.BadParameter(
-                (
-                    "If you do not specify an input file, "
-                    "the default is {} or setup.py"
-                ).format(DEFAULT_REQUIREMENTS_FILE)
+                f"If you do not specify an input file, the default is {DEFAULT_REQUIREMENTS_FILE} or setup.py"
             )
 
     if not output_file:
         # An output file must be provided for stdin
         if src_files == ("-",):
             raise click.BadParameter("--output-file is required if input is from stdin")
-        # Use default requirements output file if there is a setup.py the source file
         elif os.path.basename(src_files[0]) in METADATA_FILENAMES:
             file_name = os.path.join(
                 os.path.dirname(src_files[0]), DEFAULT_REQUIREMENTS_OUTPUT_FILE
             )
-        # An output file must be provided if there are multiple source files
         elif len(src_files) > 1:
             raise click.BadParameter(
                 "--output-file is required if two or more input files are given."
             )
-        # Otherwise derive the output file from the source file
         else:
             base_name = src_files[0].rsplit(".", 1)[0]
-            file_name = base_name + ".txt"
+            file_name = f"{base_name}.txt"
 
         output_file = click.open_file(file_name, "w+b", atomic=True, lazy=True)
 

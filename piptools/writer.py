@@ -55,13 +55,11 @@ def annotation_style_split(required_by: Set[str]) -> str:
     sorted_required_by = sorted(required_by)
     if len(sorted_required_by) == 1:
         source = sorted_required_by[0]
-        annotation = "# via " + source
+        return f"# via {source}"
     else:
         annotation_lines = ["# via"]
-        for source in sorted_required_by:
-            annotation_lines.append("    #   " + source)
-        annotation = "\n".join(annotation_lines)
-    return annotation
+        annotation_lines.extend(f"    #   {source}" for source in sorted_required_by)
+        return "\n".join(annotation_lines)
 
 
 def annotation_style_line(required_by: Set[str]) -> str:
@@ -181,7 +179,7 @@ class OutputWriter:
         # Check for unhashed or unpinned packages if at least one package does have
         # hashes, which will trigger pip install's --require-hashes mode.
         warn_uninstallable = False
-        has_hashes = hashes and any(hash for hash in hashes.values())
+        has_hashes = hashes and any(hashes.values())
 
         yielded = False
 
@@ -192,22 +190,17 @@ class OutputWriter:
             yield line
             yielded = True
 
-        unsafe_requirements = (
-            {r for r in results if r.name in UNSAFE_PACKAGES}
-            if not unsafe_requirements
-            else unsafe_requirements
-        )
-        packages = {r for r in results if r.name not in UNSAFE_PACKAGES}
-
-        if packages:
+        unsafe_requirements = unsafe_requirements or {
+            r for r in results if r.name in UNSAFE_PACKAGES
+        }
+        if packages := {r for r in results if r.name not in UNSAFE_PACKAGES}:
             for ireq in sorted(packages, key=self._sort_key):
                 if has_hashes and not hashes.get(ireq):
                     yield MESSAGE_UNHASHED_PACKAGE
                     warn_uninstallable = True
-                line = self._format_requirement(
+                yield self._format_requirement(
                     ireq, markers.get(key_from_ireq(ireq)), hashes=hashes
                 )
-                yield line
             yielded = True
 
         if unsafe_requirements:
@@ -224,11 +217,9 @@ class OutputWriter:
                 if not self.allow_unsafe:
                     yield comment(f"# {ireq_key}")
                 else:
-                    line = self._format_requirement(
+                    yield self._format_requirement(
                         ireq, marker=markers.get(ireq_key), hashes=hashes
                     )
-                    yield line
-
         # Yield even when there's no real content, so that blank files are written
         if not yielded:
             yield ""

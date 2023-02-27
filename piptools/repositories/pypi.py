@@ -100,7 +100,7 @@ class PyPIRepository(BaseRepository):
         self._dependencies_cache: Dict[InstallRequirement, Set[InstallRequirement]] = {}
 
         # Setup file paths
-        self._cache_dir = normalize_path(str(cache_dir))
+        self._cache_dir = normalize_path(cache_dir)
         self._download_dir = os.path.join(self._cache_dir, "pkgs")
 
         if PIP_VERSION[0] < 22:
@@ -502,10 +502,9 @@ def open_local_or_remote_file(link: Link, session: Session) -> Iterator[FileStre
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
             raise ValueError(f"Cannot open directory for read: {url}")
-        else:
-            st = os.stat(local_path)
-            with open(local_path, "rb") as local_file:
-                yield FileStream(stream=local_file, size=st.st_size)
+        st = os.stat(local_path)
+        with open(local_path, "rb") as local_file:
+            yield FileStream(stream=local_file, size=st.st_size)
     else:
         # Remote URL
         headers = {"Accept-Encoding": "identity"}

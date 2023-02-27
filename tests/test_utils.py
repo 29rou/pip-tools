@@ -268,9 +268,10 @@ def test_is_pinned_requirement_editable(from_editable):
 
 
 def test_key_from_ireq_normalization(from_line):
-    keys = set()
-    for line in ("zope.event", "zope-event", "zope_event", "ZOPE.event"):
-        keys.add(key_from_ireq(from_line(line)))
+    keys = {
+        key_from_ireq(from_line(line))
+        for line in ("zope.event", "zope-event", "zope_event", "ZOPE.event")
+    }
     assert len(keys) == 1
 
 

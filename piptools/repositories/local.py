@@ -69,11 +69,12 @@ class LocalRequirementsRepository(BaseRepository):
     ) -> InstallationCandidate:
         key = key_from_ireq(ireq)
         existing_pin = self.existing_pins.get(key)
-        if existing_pin and ireq_satisfied_by_existing_pin(ireq, existing_pin):
-            project, version, _ = as_tuple(existing_pin)
-            return make_install_requirement(project, version, ireq)
-        else:
+        if not existing_pin or not ireq_satisfied_by_existing_pin(
+            ireq, existing_pin
+        ):
             return self.repository.find_best_match(ireq, prereleases)
+        project, version, _ = as_tuple(existing_pin)
+        return make_install_requirement(project, version, ireq)
 
     def get_dependencies(self, ireq: InstallRequirement) -> Set[InstallRequirement]:
         return self.repository.get_dependencies(ireq)
@@ -84,8 +85,7 @@ class LocalRequirementsRepository(BaseRepository):
         )
         if existing_pin and ireq_satisfied_by_existing_pin(ireq, existing_pin):
             hashes = existing_pin.hash_options
-            hexdigests = hashes.get(FAVORITE_HASH)
-            if hexdigests:
+            if hexdigests := hashes.get(FAVORITE_HASH):
                 return {
                     ":".join([FAVORITE_HASH, hexdigest]) for hexdigest in hexdigests
                 }

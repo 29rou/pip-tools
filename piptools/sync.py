@@ -107,13 +107,12 @@ def merge(
         if ireq.match_markers():
             key = key_from_ireq(ireq)
 
-            if not ignore_conflicts:
-                existing_ireq = by_key.get(key)
-                if existing_ireq:
-                    # NOTE: We check equality here since we can assume that the
-                    # requirements are all pinned
-                    if ireq.specifier != existing_ireq.specifier:
-                        raise IncompatibleRequirements(ireq, existing_ireq)
+            if existing_ireq := by_key.get(key):
+                if (
+                    not ignore_conflicts
+                    and ireq.specifier != existing_ireq.specifier
+                ):
+                    raise IncompatibleRequirements(ireq, existing_ireq)
 
             # TODO: Always pick the largest specifier in case of a conflict
             by_key[key] = ireq
@@ -151,7 +150,6 @@ def diff(
     requirements_lut = {diff_key_from_ireq(r): r for r in compiled_requirements}
 
     satisfied = set()  # holds keys
-    to_install = set()  # holds InstallRequirement objects
     to_uninstall = set()  # holds keys
 
     pkgs_to_ignore = get_dists_to_ignore(installed_dists)
@@ -162,10 +160,11 @@ def diff(
         elif requirements_lut[key].specifier.contains(dist.version):
             satisfied.add(key)
 
-    for key, requirement in requirements_lut.items():
-        if key not in satisfied and requirement.match_markers():
-            to_install.add(requirement)
-
+    to_install = {
+        requirement
+        for key, requirement in requirements_lut.items()
+        if key not in satisfied and requirement.match_markers()
+    }
     # Make sure to not uninstall any packages that should be ignored
     to_uninstall -= set(pkgs_to_ignore)
 
