@@ -123,9 +123,9 @@ def cli(
             "the corresponding *.txt file?"
         )
         if force:
-            log.warning("WARNING: " + msg)
+            log.warning(f"WARNING: {msg}")
         else:
-            log.error("ERROR: " + msg)
+            log.error(f"ERROR: {msg}")
             sys.exit(2)
 
     if python_executable:
@@ -224,19 +224,16 @@ def _compose_install_flags(
     result = []
 
     # Build --index-url/--extra-index-url/--no-index
-    if no_index:
+    if no_index or index_url is None and not finder.index_urls:
         result.append("--no-index")
     elif index_url is not None:
         result.extend(["--index-url", index_url])
-    elif finder.index_urls:
+    else:
         finder_index_url = finder.index_urls[0]
         if finder_index_url != PyPIRepository.DEFAULT_INDEX_URL:
             result.extend(["--index-url", finder_index_url])
         for extra_index in finder.index_urls[1:]:
             result.extend(["--extra-index-url", extra_index])
-    else:
-        result.append("--no-index")
-
     for extra_index in extra_index_url:
         result.extend(["--extra-index-url", extra_index])
 
@@ -250,12 +247,10 @@ def _compose_install_flags(
 
     # Build format controls --no-binary/--only-binary
     for format_control in ("no_binary", "only_binary"):
-        formats = getattr(finder.format_control, format_control)
-        if not formats:
-            continue
-        result.extend(
-            ["--" + format_control.replace("_", "-"), ",".join(sorted(formats))]
-        )
+        if formats := getattr(finder.format_control, format_control):
+            result.extend(
+                ["--" + format_control.replace("_", "-"), ",".join(sorted(formats))]
+            )
 
     if user_only:
         result.append("--user")

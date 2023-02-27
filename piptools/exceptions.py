@@ -38,11 +38,7 @@ class NoCandidateFound(PipToolsError):
             lines.append(f"Tried: {', '.join(versions)}")
 
         if pre_versions:
-            if self.finder.allow_all_prereleases:
-                line = "Tried"
-            else:
-                line = "Skipped"
-
+            line = "Tried" if self.finder.allow_all_prereleases else "Skipped"
             line += f" pre-versions: {', '.join(pre_versions)}"
             lines.append(line)
 
@@ -56,11 +52,10 @@ class NoCandidateFound(PipToolsError):
             redacted_urls = tuple(
                 redact_auth_from_url(url) for url in self.finder.index_urls
             )
-            lines.append("No versions found")
-            lines.append(
-                "{} {} reachable?".format(
-                    "Were" if len(redacted_urls) > 1 else "Was",
-                    " or ".join(redacted_urls),
+            lines.extend(
+                (
+                    "No versions found",
+                    f'{"Were" if len(redacted_urls) > 1 else "Was"} {" or ".join(redacted_urls)} reachable?',
                 )
             )
         return "\n".join(lines)

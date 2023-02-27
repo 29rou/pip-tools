@@ -4,11 +4,7 @@ from piptools.repositories import LocalRequirementsRepository
 from piptools.utils import key_from_ireq
 
 
-@pytest.mark.parametrize(
-    ("input", "pins", "expected"),
-    (
-        (tup)
-        for tup in [
+@pytest.mark.parametrize(("input", "pins", "expected"), iter([
             # Add Flask to an existing requirements.in, using --no-upgrade
             (
                 ["flask", "jinja2", "werkzeug"],
@@ -29,9 +25,7 @@ from piptools.utils import key_from_ireq
                     "markupsafe==0.23 (from jinja2==2.7.3)",
                 ],
             )
-        ]
-    ),
-)
+        ]))
 def test_no_upgrades(base_resolver, repository, from_line, input, pins, expected):
     input = [from_line(line) for line in input]
     existing_pins = {}

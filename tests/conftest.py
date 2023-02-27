@@ -246,7 +246,7 @@ def make_package(tmp_path):
             install_requires = []
 
         if extras_require is None:
-            extras_require = dict()
+            extras_require = {}
 
         install_requires_str = "[{}]".format(
             ",".join(f"{package!r}" for package in install_requires)

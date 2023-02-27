@@ -37,13 +37,14 @@ class RequirementSummary:
         self.specifier = ireq.specifier
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-
         return (
-            self.key == other.key
-            and self.specifier == other.specifier
-            and self.extras == other.extras
+            (
+                self.key == other.key
+                and self.specifier == other.specifier
+                and self.extras == other.extras
+            )
+            if isinstance(other, self.__class__)
+            else NotImplemented
         )
 
     def __hash__(self) -> int:
@@ -175,10 +176,7 @@ class Resolver:
                 has_changed, best_matches = self._resolve_one_round()
                 log.debug("-" * 60)
                 log.debug(
-                    "Result of round {}: {}".format(
-                        current_round,
-                        "not stable" if has_changed else "stable, done",
-                    )
+                    f'Result of round {current_round}: {"not stable" if has_changed else "stable, done"}'
                 )
                 if not has_changed:
                     break
@@ -379,9 +377,7 @@ class Resolver:
 
         # Format the best match
         log.debug(
-            "found candidate {} (constraint was {})".format(
-                format_requirement(best_match), format_specifier(ireq)
-            )
+            f"found candidate {format_requirement(best_match)} (constraint was {format_specifier(ireq)})"
         )
         best_match.comes_from = ireq.comes_from
         if hasattr(ireq, "_source_ireqs"):
